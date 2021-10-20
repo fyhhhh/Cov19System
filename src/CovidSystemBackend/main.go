@@ -29,6 +29,25 @@ type Detail struct {
    Dead        int32
 }
 
+type ProvinceTotal struct {
+   UpdateTime       string
+   Province         string
+   TotalNow         int32
+   TotalConfirmAdd  int32
+   TotalHeal        int32
+   TotalDead        int32
+}
+
+type CityTotal struct {
+   UpdateTime        string
+   Province          string
+   City              string
+   TotalNow          int32
+   TotalConfirmAdd   int32
+   TotalHeal         int32
+   TotalDead         int32
+}
+
 type History struct{
    Ds          string
    Confirm     int32
@@ -75,8 +94,8 @@ func main(){
    r.GET("/details",func(c *gin.Context){
       provinceName := c.Query("province")
       cityName := c.Query("city")
-      if provinceName == "" || cityName == "" {
-
+      newest := c.Query("newest")
+      if provinceName == "" {
          var details []Detail
          result := db.Find(&details)
          if result.Error != nil {
@@ -84,13 +103,33 @@ func main(){
          }
          c.JSON(200, details)
       } else{
-         var detail Detail
-         result := db.Where("Province=? and City=?",provinceName,cityName).Find(&detail)
-         if result.Error != nil {
-            fmt.Println("Details select failed")
+         if cityName != "" {
+            var cityTotals []CityTotal
+            var result *gorm.DB
+            if newest == "true" {
+               result = db.Model(&Detail{}).Select("update_time,province,city,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Order("update_time desc").First(&cityTotals)
+              } else {
+               result = db.Model(&Detail{}).Select("update_time,province,city,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Find(&cityTotals)
+            }
+            if result.Error != nil {
+               fmt.Println("Details select failed")
+            }
+            c.JSON(200, cityTotals)
+         } else{
+            var provinceTotals []ProvinceTotal
+            var result *gorm.DB
+            if newest == "true"{
+               result = db.Model(&Detail{}).Select("update_time,province,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?",provinceName).Group("province,update_time").Order("update_time desc").First(&provinceTotals)
+            } else {
+               result = db.Model(&Detail{}).Select("update_time,province,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,update_time").Find(&provinceTotals)
+            }
+            if result.Error != nil {
+               fmt.Println("Details select failed")
+            }
+            c.JSON(200, provinceTotals)
          }
-         c.JSON(200, detail)
       }
+
    })
 
    r.GET("/histories", func(c *gin.Context) {
