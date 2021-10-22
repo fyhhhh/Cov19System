@@ -5,6 +5,8 @@ import (
    "github.com/gin-gonic/gin"
    "gorm.io/driver/mysql"
    "gorm.io/gorm"
+   "io"
+   "os"
 )
 type Hospital struct {
    ID       int32
@@ -76,7 +78,29 @@ type Report struct {
 
 func main(){
    //GORM连接数据库
-   dsn := "root:156324@(localhost:3306)/cov19?charset=utf8mb4&parseTime=True&loc=Local"
+   fileName := "./passwd.txt"
+   file, err := os.Open(fileName)
+   if err != nil{
+      fmt.Println("Read file err, err =", err)
+      return
+   }
+   defer file.Close()
+   var chunk []byte
+   buf := make([]byte, 1024)
+   for{
+      n, err := file.Read(buf)
+      if err != nil && err != io.EOF{
+         fmt.Println("read buf fail", err)
+         return
+      }
+      //说明读取结束
+      if n == 0 {
+         break
+      }
+      //读取到最终的缓冲区中
+      chunk = append(chunk, buf[:n]...)
+   }
+   dsn := "root:"+string(chunk)+"@(localhost:3306)/cov19?charset=utf8mb4&parseTime=True&loc=Local"
    db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
    if err != nil{
       panic(err)
@@ -95,7 +119,8 @@ func main(){
       provinceName := c.Query("province")
       cityName := c.Query("city")
       newest := c.Query("newest")
-      if provinceName == "" {
+
+      if provinceName == "" { //没有省名字，报错
          var details []Detail
          result := db.Find(&details)
          if result.Error != nil {
@@ -103,30 +128,60 @@ func main(){
          }
          c.JSON(200, details)
       } else{
-         if cityName != "" {
-            var cityTotals []CityTotal
-            var result *gorm.DB
-            if newest == "true" {
-               result = db.Model(&Detail{}).Select("update_time,province,city,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Order("update_time desc").First(&cityTotals)
-              } else {
-               result = db.Model(&Detail{}).Select("update_time,province,city,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Find(&cityTotals)
+         if cityName != "" { //有市的名字，详细查询
+            if cityName == "all" { //all，查询所有
+               var cityTotals []CityTotal
+               var result *gorm.DB
+               if newest == "true" {
+                  subQuery := db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,city,update_time")
+                  result = db.Table("(?) as t",subQuery).Select("max(update_time)as update_time,province,city,total_now,total_confirm_add,total_heal,total_dead").Group("city").Find(&cityTotals)
+               } else {
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,city,update_time").Find(&cityTotals)
+               }
+               if result.Error != nil {
+                  fmt.Println("Details select failed")
+               }
+               c.JSON(200, cityTotals)
+            } else{ //查询某一个市
+               var cityTotals []CityTotal
+               var result *gorm.DB
+               if newest == "true" {
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Order("update_time desc").First(&cityTotals)
+               } else {
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Find(&cityTotals)
+               }
+               if result.Error != nil {
+                  fmt.Println("Details select failed")
+               }
+               c.JSON(200, cityTotals)
             }
-            if result.Error != nil {
-               fmt.Println("Details select failed")
+         } else{ //没有市，查询省级信息
+            if provinceName=="all" { //查询全部省级信息
+               var provinceTotals []ProvinceTotal
+               var result *gorm.DB
+               if newest == "true" {
+                  subQuery := db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Group("province,update_time")
+                  result = db.Table("(?) as t",subQuery).Select("max(update_time)as update_time,province,total_now,total_confirm_add,total_heal,total_dead").Group("province").Find(&provinceTotals)
+               } else {
+                  result = db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Group("province,update_time").Find(&provinceTotals)
+               }
+               if result.Error != nil {
+                  fmt.Println("Details select failed")
+               }
+               c.JSON(200, provinceTotals)
+            } else{ //查询某一个省级信息
+               var provinceTotals []ProvinceTotal
+               var result *gorm.DB
+               if newest == "true" {
+                  result = db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,update_time").Order("update_time desc").First(&provinceTotals)
+               } else {
+                  result = db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,update_time").Find(&provinceTotals)
+               }
+               if result.Error != nil {
+                  fmt.Println("Details select failed")
+               }
+               c.JSON(200, provinceTotals)
             }
-            c.JSON(200, cityTotals)
-         } else{
-            var provinceTotals []ProvinceTotal
-            var result *gorm.DB
-            if newest == "true"{
-               result = db.Model(&Detail{}).Select("update_time,province,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?",provinceName).Group("province,update_time").Order("update_time desc").First(&provinceTotals)
-            } else {
-               result = db.Model(&Detail{}).Select("update_time,province,sum(confirm)-sum(heal)-sum(dead) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,update_time").Find(&provinceTotals)
-            }
-            if result.Error != nil {
-               fmt.Println("Details select failed")
-            }
-            c.JSON(200, provinceTotals)
          }
       }
 
