@@ -1,6 +1,9 @@
-#pragma once
+#ifndef QUICREATOR_H
+#define QUICREATOR_H
 
-#include <QtWidgets/QMainWindow>
+#pragma execution_character_set("utf-8")
+
+#include <QMainWindow>
 #include "ui_CovidSystemControl.h"
 
 class CovidSystemControl : public QMainWindow
@@ -8,8 +11,18 @@ class CovidSystemControl : public QMainWindow
     Q_OBJECT
 
 public:
-    CovidSystemControl(QWidget *parent = Q_NULLPTR);
+    CovidSystemControl(QWidget* parent = 0);
+    ~CovidSystemControl();
+    Ui::CovidSystemControl *ui;
 
-private:
-    Ui::CovidSystemControlClass ui;
+private slots:
+    void initForm();
+    void initTableWidget();
+    void initTreeWidget();
+    void initListWidget();
+    void initOther();
+    void initStyle();
+    void initTranslator();
 };
+
+#endif // QUICREATOR_H
