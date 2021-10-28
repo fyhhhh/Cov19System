@@ -2,6 +2,16 @@
 
 ## 更新日志
 
+##### 2021.10.28
+
+--update--
+
+1. 优化了管理端接口
+2. 新增了省市县数据集和查询接口
+3. 管理端页面总览和树状逻辑完成
+
+-----
+
 ##### 2021.10.27
 
 --update--
@@ -10,6 +20,8 @@
 2. 重构了服务器面向管理端模块和嵌入式模块的接口
 3. 引入了StyleDemo QT5样式系列
 4. 对管理端和嵌入式模块进行简单设计
+
+----
 
 ##### 2021.10.22 16:30
 
@@ -329,16 +341,17 @@ RETURN JSON:
 
 ##### 4.1.5 突发疫情信息查询
 
-GET [IP]:[PORT]/reports?province=[省/直辖市]&city=[市/直辖市区]
+GET [IP]:[PORT]/reports?province=[省/直辖市]&city=[市/直辖市区]&county=[区县/直辖市同city]
 
 ```json
-GET localhost:8080/reports?province=陕西省&city=西安市
+GET localhost:8080/reports?province=陕西省&city=西安市&county=长安区
 RETURN JSON:
 [
     {
-        "Id": 1,
+        "IdReport": 1,
         "Province": "陕西省",
         "City": "西安市",
+        "County": "长安区",
         "District": "西工大长安校区",
         "Info": "检测到体温异常"
     },
@@ -349,13 +362,30 @@ RETURN JSON:
 
 ### 4.2 提供给管理客户端的接口
 
-（待完善，尚未实现）
-
 ##### 4.2.1 获取未处理的异常信息
 
 从abnormal表获取信息：
 
-GET [IP]:[PORT]/abnormal
+GET [IP]:[PORT]/abnormal (?province=[省/直辖市]&city=[市/直辖市区]&county=[区县/直辖市同city])
+
+```json
+GET localhost:8080/abnormal?province=陕西省&city=西安市&county=碑林区
+RETURN JSON:
+[
+    {
+        "IdAbnormal": 2,
+        "Province": "陕西省",
+        "City": "西安市",
+        "County": "碑林区",
+        "District": "西工大友谊校区",
+        "Info": "检测到体温异常"
+    },
+]
+```
+
+
+
+
 
 ##### 4.2.2 警报信息汇报
 
@@ -368,7 +398,8 @@ POST JSON:
 {
     "Province": "陕西省",
     "City": "西安市",
-    "District": "西工大长安校区",
+    "County": "碑林区",
+    "District": "西工大友谊校区",
     "Info": "检测到体温异常"
 }
 ```
@@ -384,20 +415,97 @@ POST JSON:
 {
     "Province": "陕西省",
     "City": "西安市",
-    "District": "西工大长安校区",
+    "County": "碑林区",
+    "District": "西工大友谊校区",
     "Info": "检测到体温异常"
 }
 ```
 
 ### 4.3 提供给嵌入式终端的接口
 
-（待完善，尚未实现）
-
 ##### 4.3.1 异常信息汇报
 
 向abnormal表中发送信息：
 
 POST [IP]:[PORT]/abnormal
+
+```json
+POST JSON:
+{
+    "Province": "陕西省",
+    "City": "西安市",
+    "County": "长安区",
+    "District": "东大街道",
+    "Info": "检测到体温异常"
+}
+```
+
+### 4.4 省市县信息接口
+
+##### 4.4.1 查询所有省级信息
+
+GET [IP]:[PORT]/area?province=all
+
+```json
+GET localhost:8080/area?province=all
+[
+    "北京市",
+    "天津市",
+    ...
+]
+```
+
+##### 4.4.2 查询某省所有市级信息
+
+GET [IP]:[PORT]/area?province=[省名]
+
+```json
+GET localhost:8080/area?province=陕西省
+RETURN JSON:
+[
+    "西安市",
+    "铜川市",
+    ...
+]
+```
+
+##### 4.4.3 查询某市所有县级信息
+
+GET  [IP]:[PORT]/area?city=[市名]
+
+```json
+GET localhost:8080/area?city=西安市
+RETURN JSON:
+[
+    "市辖区",
+    "新城区",
+    ...
+]
+```
+
+##### 4.4.4 查询所有省市县三级信息
+
+GET [IP]:[PORT]/area
+
+```json
+GET localhost:8080/area
+RETURN JSON:
+[
+    {
+        "Province": "北京市",
+        "City": "北京市",
+        "County": "东城区"
+    },
+    {
+        "Province": "北京市",
+        "City": "北京市",
+        "County": "西城区"
+    },
+    ...
+]
+```
+
+
 
 ## 5 基于JavaScript实现的Web网页客户端及用户交互模块
 

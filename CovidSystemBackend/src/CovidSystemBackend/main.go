@@ -69,11 +69,47 @@ type RiskArea struct{
 }
 
 type Report struct {
-   Id       int32
-   Province string
-   City     string
-   District string
-   Info     string
+   IdReport    int32
+   Province    string
+   City        string
+   County      string
+   District    string
+   Info        string
+}
+
+type Abnormal struct {
+   IdAbnormal  int32
+   Province    string
+   City        string
+   County      string
+   District    string
+   Info        string
+}
+
+type Province struct {
+   Id    int32
+   Code  string
+   Name  string
+}
+
+type City struct {
+   Id             int32
+   Code           string
+   Name           string
+   ProvinceCode   string
+}
+
+type County struct {
+   Id             int32
+   Code           string
+   Name           string
+   CityCode       string
+}
+
+type Area struct{
+   Province    string
+   City        string
+   County      string
 }
 
 func main(){
@@ -226,13 +262,14 @@ func main(){
    r.GET("/reports", func(c *gin.Context) {
       provinceName := c.Query("province")
       cityName := c.Query("city")
-      if provinceName == "" || cityName == "" {
+      countyName := c.Query("county")
+      if provinceName == "" || cityName == "" || countyName == ""{
          c.JSON(200, gin.H{
             "error":"select province and city needed",
          })
       } else {
          var reports []Report
-         result := db.Where("Province=? and City=?",provinceName,cityName).Find(&reports)
+         result := db.Where("Province=? and City=? and County=?",provinceName,cityName,countyName).Find(&reports)
          if result.Error != nil {
             fmt.Println("Reports select failed")
          }
@@ -244,6 +281,8 @@ func main(){
       json := make(map[string]interface{}) //注意该结构接受的内容
       c.BindJSON(&json)
       c.String(200,"received")
+      var abnormal Abnormal
+      db.Model(&Abnormal{}).Where("province=? and city=? and county=? and district=? and info=?",json["Province"],json["City"],json["County"],json["District"],json["Info"]).Delete(&abnormal)
       db.Model(&Report{}).Create(json)
    })
 
@@ -251,10 +290,93 @@ func main(){
       json := make(map[string]interface{}) //注意该结构接受的内容
       c.BindJSON(&json)
       c.String(200,"received")
-
       var report Report
-      db.Where("province=? and city=? and district=? and info=?",json["Province"],json["City"],json["District"],json["Info"]).Delete(&report)
+      db.Where("province=? and city=? and county=? and district=? and info=?",json["Province"],json["City"],json["County"],json["District"],json["Info"]).Delete(&report)
    })
 
+   r.GET("/abnormal", func(c *gin.Context) {
+      provinceName := c.Query("province")
+      cityName := c.Query("city")
+      countyName := c.Query("county")
+      if provinceName == "" || cityName == "" || countyName == ""{
+         var abnormals []Abnormal
+         result := db.Find(&abnormals)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         c.JSON(200, abnormals)
+      } else {
+         var abnormals []Abnormal
+         result := db.Model(&Abnormal{}).Where("Province=? and City=? and County=?",provinceName,cityName,countyName).Find(&abnormals)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         c.JSON(200, abnormals)
+      }
+   })
+
+   r.POST("/abnormal", func(c *gin.Context) {
+      json := make(map[string]interface{}) //注意该结构接受的内容
+      c.BindJSON(&json)
+      c.String(200,"received")
+      db.Model(&Abnormal{}).Create(json)
+   })
+   
+   r.GET("/area", func(c *gin.Context) {
+      provinceName := c.Query("province")
+      cityName := c.Query("city")
+      if provinceName == "" && cityName == ""{
+         var areas []Area
+         subQuery := db.Model(&County{}).Select("cities.province_code,cities.name as city,counties.name as county ").Joins("left join cities on counties.city_code=cities.code")
+         result := db.Model(&Province{}).Select("provinces.name as province,t.city,t.county ").Joins("right join (?) as t on t.province_code=provinces.code",subQuery).Find(&areas)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         c.JSON(200, areas)
+         return
+      }
+      if provinceName == "all"{
+         var provinces []Province
+         var provinceNames []string
+         result := db.Model(&Province{}).Find(&provinces)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         for i := range provinces {
+            provinceNames = append(provinceNames,provinces[i].Name)
+         }
+         c.JSON(200, provinceNames)
+         return
+      }
+      if provinceName != ""{
+         var cities []City
+         var cityNames []string
+         subQuery := db.Model(&Province{}).Select("Code").Where("name=?",provinceName)
+         result := db.Model(&City{}).Where("province_code in (?)", subQuery).Find(&cities)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         for i := range cities{
+            cityNames = append(cityNames,cities[i].Name)
+         }
+         c.JSON(200,cityNames)
+         return
+      }
+      if cityName != ""{
+         var counties []County
+         var countyNames []string
+         subQuery := db.Model(&City{}).Select("Code").Where("name=?",cityName)
+         result := db.Model(&County{}).Where("city_code in (?)", subQuery).Find(&counties)
+         if result.Error != nil {
+            fmt.Println("Reports select failed")
+         }
+         for i := range counties{
+            countyNames = append(countyNames,counties[i].Name)
+         }
+         c.JSON(200,countyNames)
+         return
+      }
+   })
+   
    r.Run()
 }

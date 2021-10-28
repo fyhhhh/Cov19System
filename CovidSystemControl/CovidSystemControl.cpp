@@ -3,22 +3,31 @@
 #include "qtranslator.h" 
 #include "qdesktopwidget.h"
 
-CovidSystemControl::CovidSystemControl(QWidget* parent) :
+
+CovidSystemControl::CovidSystemControl(CovidInfoController* covidInfoController, QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::CovidSystemControl)
 {
+    this->controller = covidInfoController;
     ui->setupUi(this);
-
-    //this->initStyle();
-    //this->initTranslator();
-    this->initTableWidget();
-
+    this->initStyle();
+    this->initTranslator();
+    connect(controller, SIGNAL(updateAbnormalFinished()), this, SLOT(initTableWidget()));
+    connect(controller, SIGNAL(initialAreaFinished()), this, SLOT(initTreeWidget()));
     ui->tabWidget->setCurrentIndex(0);
 }
 
 CovidSystemControl::~CovidSystemControl()
 {
     delete ui;
+}
+
+void CovidSystemControl::initForm()
+{
+    /*this->initTableWidget();
+    this->initTreeWidget();
+    this->initListWidget();
+    this->initOther();*/
 }
 
 void CovidSystemControl::initStyle()
@@ -59,6 +68,7 @@ void CovidSystemControl::initTableWidget()
     ui->tableWidget->setColumnWidth(4, width * 0.15);
     ui->tableWidget->verticalHeader()->setDefaultSectionSize(25);
 
+    //设置表头信息
     QStringList headText;
     headText << "省/市" << "市/区" << "地区" << "内容" << "时间";
     ui->tableWidget->setHorizontalHeaderLabels(headText);
@@ -68,86 +78,85 @@ void CovidSystemControl::initTableWidget()
     ui->tableWidget->setAlternatingRowColors(true);
     ui->tableWidget->verticalHeader()->setVisible(false);
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-
-    //设置行高
     ui->tableWidget->setRowCount(300);
 
-    for (int i = 0; i < 300; i++) {
+    QVector<Abnormal*>* abnormalInfo = controller->getAbnormalInfo();
+    //视图显示
+    for (int i = 0; i < abnormalInfo->size(); i++)
+    {
         ui->tableWidget->setRowHeight(i, 24);
-
-        QTableWidgetItem* itemDeviceID = new QTableWidgetItem(QString::number(i + 1));
-        QTableWidgetItem* itemDeviceName = new QTableWidgetItem(QString("测试设备%1").arg(i + 1));
-        QTableWidgetItem* itemDeviceAddr = new QTableWidgetItem(QString::number(i + 1));
-        QTableWidgetItem* itemContent = new QTableWidgetItem("防区告警");
-        QTableWidgetItem* itemTime = new QTableWidgetItem(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-
-        ui->tableWidget->setItem(i, 0, itemDeviceID);
-        ui->tableWidget->setItem(i, 1, itemDeviceName);
-        ui->tableWidget->setItem(i, 2, itemDeviceAddr);
-        ui->tableWidget->setItem(i, 3, itemContent);
-        ui->tableWidget->setItem(i, 4, itemTime);
+        ui->tableWidget->setItem(i, 0, new QTableWidgetItem(abnormalInfo->at(i)->Province));
+        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(abnormalInfo->at(i)->City));
+        ui->tableWidget->setItem(i, 2, new QTableWidgetItem(abnormalInfo->at(i)->County));
+        ui->tableWidget->setItem(i, 3, new QTableWidgetItem(abnormalInfo->at(i)->District));
+        ui->tableWidget->setItem(i, 4, new QTableWidgetItem(abnormalInfo->at(i)->Info));
     }
 }
-
-
-
-
-
-
-
-
-
-
-void CovidSystemControl::initForm()
-{
-    this->initTableWidget();
-    this->initTreeWidget();
-    this->initListWidget();
-    this->initOther();
-}
-
 
 void CovidSystemControl::initTreeWidget()
 {
     ui->treeWidget->clear();
-    ui->treeWidget->setHeaderLabel(" 树状列表控件");
+    ui->treeWidget->setHeaderLabel("异常信息筛选");
 
-    QTreeWidgetItem* group1 = new QTreeWidgetItem(ui->treeWidget);
-    group1->setText(0, "父元素1");
-    group1->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    group1->setCheckState(0, Qt::PartiallyChecked);
+    QVector<Area*>* areaInfo = controller->getAreaInfo();
+    QTreeWidgetItem* provinceItem = NULL;
+    QTreeWidgetItem* cityItem = NULL;
+    QTreeWidgetItem* countyItem = NULL;
+    for (int i = 0; i < areaInfo->size(); i++)
+    {
+        provinceItem = NULL;
+        cityItem = NULL;
+        countyItem = NULL;
+        for (int j = 0; j < ui->treeWidget->topLevelItemCount(); j++)
+        {
+            if (ui->treeWidget->topLevelItem(j)->text(0)==areaInfo->at(i)->Province)
+            {
+                provinceItem = ui->treeWidget->topLevelItem(j);
+            }
+        }
+        if (provinceItem == NULL)
+        {
+            QTreeWidgetItem* newProvinceItem = new QTreeWidgetItem(ui->treeWidget);
+            newProvinceItem->setText(0, areaInfo->at(i)->Province);
+            provinceItem = newProvinceItem;
+        }
+        for (int j = 0; j < provinceItem->childCount(); j++)
+        {
+            if (provinceItem->child(j)->text(0) == areaInfo->at(i)->City)
+            {
+                cityItem = provinceItem->child(j);
+            }
+        }
+        if (cityItem == NULL)
+        {
+            QTreeWidgetItem* newCityItem = new QTreeWidgetItem(provinceItem);
+            newCityItem->setText(0, areaInfo->at(i)->City);
+            cityItem = newCityItem;
+        }
+        for (int j = 0; j < cityItem->childCount(); j++)
+        {
+            if (cityItem->child(j)->text(0) == areaInfo->at(i)->County)
+            {
+                countyItem = cityItem->child(j);
+            }
+        }
+        if (countyItem == NULL)
+        {
+            QTreeWidgetItem* newCountyItem = new QTreeWidgetItem(cityItem);
+            newCountyItem->setText(0, areaInfo->at(i)->County);
+            countyItem = newCountyItem;
+        }
+    }
+    ui->treeWidget->collapseAll();
+    connect(ui->treeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)), this, SLOT(treeClicked(QTreeWidgetItem*, int)));
+}
 
-    QTreeWidgetItem* subItem11 = new QTreeWidgetItem(group1);
-    subItem11->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    subItem11->setText(0, "子元素1");
-    subItem11->setCheckState(0, Qt::Checked);
-
-    QTreeWidgetItem* subItem12 = new QTreeWidgetItem(group1);
-    subItem12->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    subItem12->setText(0, "子元素2");
-    subItem12->setCheckState(0, Qt::Unchecked);
-
-    QTreeWidgetItem* subItem13 = new QTreeWidgetItem(group1);
-    subItem13->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    subItem13->setText(0, "子元素3");
-    subItem13->setCheckState(0, Qt::Unchecked);
-
-    QTreeWidgetItem* group2 = new QTreeWidgetItem(ui->treeWidget);
-    group2->setText(0, "父元素2");
-    group2->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    group2->setCheckState(0, Qt::Unchecked);
-
-    QTreeWidgetItem* subItem21 = new QTreeWidgetItem(group2);
-    subItem21->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    subItem21->setText(0, "子元素1");
-    subItem21->setCheckState(0, Qt::Unchecked);
-
-    QTreeWidgetItem* subItem211 = new QTreeWidgetItem(subItem21);
-    subItem211->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    subItem211->setText(0, "子子元素1");
-    subItem211->setCheckState(0, Qt::Unchecked);
-
-    ui->treeWidget->expandAll();
+void CovidSystemControl::treeClicked(QTreeWidgetItem* clickedItem, int index)
+{
+    if (clickedItem->parent() && clickedItem->parent()->parent())
+    {
+        qDebug() << clickedItem->parent()->parent()->text(index) << clickedItem->parent()->text(index) << clickedItem->text(index);
+    }
 }
 
 void CovidSystemControl::initListWidget()
@@ -172,9 +181,6 @@ void CovidSystemControl::initOther()
     ui->tab9->setStyleSheet("QPushButton{font:20pt;}");
     ui->widgetVideo->setStyleSheet("QLabel{font:20pt;}");
   
-    ui->widgetLeft->setProperty("nav", "left");
-    ui->widgetBottom->setProperty("form", "bottom");
-    ui->widgetTop->setProperty("nav", "top");
     ui->widgetVideo->setProperty("video", true);
 
     QList<QLabel*> labChs = ui->widgetVideo->findChildren<QLabel*>();
