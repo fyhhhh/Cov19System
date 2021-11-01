@@ -10,13 +10,10 @@ CovidSystemControl::CovidSystemControl(CovidInfoController* covidInfoController,
     this->initStyle();
     this->initTranslator();
 
-    ui->txtMain->hide();
-    ui->pushButton_release->hide();
-    ui->pushButton_cancel->hide();
     ui->label->setFont(QFont(RuiZi, 12));
     ui->label->setText("常态化疫情分析平台设备管理系统");
     dynamic_cast<QGridLayout*>(ui->centralwidget->layout())->setColumnStretch(1, 1);
-    
+
 
     connect(controller, SIGNAL(updateAbnormalFinished()), this, SLOT(initTableWidget()));
     connect(controller, SIGNAL(initialAreaFinished()), this, SLOT(initTreeWidget()));
@@ -25,8 +22,21 @@ CovidSystemControl::CovidSystemControl(CovidInfoController* covidInfoController,
     QObject::connect(ui->listWidget, &QListWidget::currentRowChanged, this, &CovidSystemControl::listChanged);
     QObject::connect(ui->tabWidget, &QTabWidget::currentChanged, this, &CovidSystemControl::tabChanged);
 
-    ui->txtMain->setFont(QFont(RuiZi, 18));
+    ui->txtMain->setFont(QFont(RuiZi, 22));
     ui->txtMain->setAlignment(Qt::AlignHCenter);
+
+    QPalette pal;
+    pal.setBrush(QPalette::Background, QBrush(QPixmap("./other/image/txtMain.jpg")));
+    this->setPalette(pal);
+
+    listShow();
+
+    closeButton = new QPushButton(this);
+    QObject::connect(closeButton, &QPushButton::released, this, &CovidSystemControl::closeAll);
+    closeButton->setGeometry(qApp->desktop()->availableGeometry().width() * 0.93, qApp->desktop()->availableGeometry().height() * 0.006, qApp->desktop()->availableGeometry().width() * 0.06, qApp->desktop()->availableGeometry().height() * 0.03);
+    closeButton->setText("关闭");
+    closeButton->setFont(QFont(RuiZi, 12));
+    closeButton->show();
 }
 
 CovidSystemControl::~CovidSystemControl()
@@ -178,7 +188,7 @@ void CovidSystemControl::treeClicked(QTreeWidgetItem* clickedItem, int index)
         {
             for (int i = 0; i < select->size(); i++)
             {
-                ui->listWidget->addItem("\t\t" + select->at(i)->Province + "\t" + select->at(i)->City + "\t" + select->at(i)->County + "\t" + select->at(i)->District + "\t\t" + select->at(i)->Info);
+                ui->listWidget->addItem(QString::number(i + 1) + "\t" + select->at(i)->Province + "\t" + select->at(i)->City + "\t" + select->at(i)->County + "\t" + select->at(i)->District + "\t\t" + select->at(i)->Info);
             }
         }
     }
@@ -191,38 +201,39 @@ void CovidSystemControl::initListWidget()
 
 void CovidSystemControl::listChanged(int row)
 {
-    qDebug() << row;
+
     if (row >= 0)
     {
-        ui->txtMain->clear();
         now = select->at(row);
-        ui->txtMain->setText(now->Province + "\t" + now->City + "\t" + now->County + "\t" + now->District + "\t\t" + now->Info);
+        static QString messageTitle = "检测设备报告：";
+        static QString message = "\n" + now->Province + "\t" + now->City + "\t" + now->County + "\t" + now->District + "\t\t" + now->Info;
+        static QString messageTile = "\n请选择是否发布";
+        ui->txtMain->setText(messageTitle + message + messageTile);
+        treeShow();
     }
     else
     {
-        ui->txtMain->clear();
+        ui->txtMain->setText("");
     }
 }
 
 void CovidSystemControl::tabChanged(int index)
 {
-    switch (index)
+    if (index != 1)
     {
-    case 0:
-        ui->txtMain->hide();
-        ui->pushButton_release->hide();
-        ui->pushButton_cancel->hide();
-        break;
-    case 1:
-        ui->txtMain->show();
-        ui->pushButton_release->show();
-        ui->pushButton_cancel->show();
-        break;
-    default:
-        break;
+        listShow();
     }
 }
 
-void CovidSystemControl::titleShow()
+inline void CovidSystemControl::listShow()
 {
+    ui->txtMain->hide();
+    ui->pushButton_release->hide();
+    ui->pushButton_cancel->hide();
+}
+inline void CovidSystemControl::treeShow()
+{
+    ui->txtMain->show();
+    ui->pushButton_release->show();
+    ui->pushButton_cancel->show();
 }

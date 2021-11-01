@@ -34,13 +34,16 @@ private slots:
     void treeClicked(QTreeWidgetItem* clickedItem, int index);
     void listChanged(int row);
     void tabChanged(int index);
-    void titleShow();
+    inline void listShow();
+    inline void treeShow();
+    inline void closeAll() { this->close(); }
 
 private:
     CovidInfoController* controller;
     QVector<Abnormal*>* select;
     QString RuiZi;
     Abnormal* now;
+    QPushButton* closeButton = NULL;
 };
 
 #endif // QUICREATOR_H

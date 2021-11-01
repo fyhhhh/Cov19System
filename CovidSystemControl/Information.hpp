@@ -86,3 +86,8 @@ public:
     }
 };
 
+inline void imgPathToHtml(QString& path)
+{
+    path = QString("<img src=\"%1\"/>").arg(path);
+}
+

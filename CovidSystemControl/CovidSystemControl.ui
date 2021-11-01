@@ -15,9 +15,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0,0,0" columnstretch="0,0">
-    <item row="2" column="1" rowspan="2">
-     <widget class="QTextBrowser" name="txtMain"/>
-    </item>
     <item row="4" column="1">
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <item>
@@ -219,52 +216,18 @@
       </widget>
      </widget>
     </item>
+    <item row="2" column="1" rowspan="2">
+     <widget class="QTextBrowser" name="txtMain">
+      <property name="html">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'SimSun';&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>905</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menu_F">
-    <property name="title">
-     <string>文件(&amp;F)</string>
-    </property>
-    <addaction name="action"/>
-    <addaction name="action_O"/>
-    <addaction name="separator"/>
-    <addaction name="action_S"/>
-    <addaction name="action_C"/>
-   </widget>
-   <widget class="QMenu" name="menu_E">
-    <property name="title">
-     <string>编辑(&amp;E)</string>
-    </property>
-    <addaction name="action_X"/>
-    <addaction name="action_C_2"/>
-    <addaction name="action_V"/>
-   </widget>
-   <widget class="QMenu" name="menu_B">
-    <property name="title">
-     <string>构建(&amp;B)</string>
-    </property>
-    <addaction name="actionGouj"/>
-   </widget>
-   <widget class="QMenu" name="menu_H">
-    <property name="title">
-     <string>帮助(&amp;H)</string>
-    </property>
-    <addaction name="action_T"/>
-    <addaction name="action_A"/>
-   </widget>
-   <addaction name="menu_F"/>
-   <addaction name="menu_E"/>
-   <addaction name="menu_B"/>
-   <addaction name="menu_H"/>
   </widget>
   <action name="action">
    <property name="text">
