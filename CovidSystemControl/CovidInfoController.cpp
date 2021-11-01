@@ -53,6 +53,20 @@ void CovidInfoController::initialAreaInfo()
     QNetworkReply* reply = naManager->get(request);
 }
 
+QVector<Abnormal*>* CovidInfoController::findAbnormalInfo(QString& county)
+{
+    QVector<Abnormal*>* res = new QVector<Abnormal*>;
+    res->clear();
+    for (int i = 0; i < abnormalInfo.size(); i++)
+    {
+        if (abnormalInfo.at(i)->County == county)
+        {
+            res->push_back(abnormalInfo[i]);
+        }
+    }
+    return res->empty() ? NULL : res;
+}
+
 void CovidInfoController::initialAreaInfoFinished(QNetworkReply* reply)
 {
     QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);

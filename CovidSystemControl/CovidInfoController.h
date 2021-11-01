@@ -32,7 +32,7 @@ public:
     }
     void updateAbnormalInfo();
     void initialAreaInfo();
-
+    QVector<Abnormal*>* findAbnormalInfo(QString& county);
 signals:
     void updateAbnormalFinished();
     void initialAreaFinished();

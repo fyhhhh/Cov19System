@@ -9,7 +9,8 @@ const QVector<QString> Area::names = QVector<QString>({ "Province","City","Count
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    a.setFont(QFont("Microsoft Yahei", 9));
+
+    a.setFont(QFont(QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont("./other/ttf/RuiZi.ttf")).at(0), 9));
     a.setWindowIcon(QIcon("./other/main.ico"));
 
     CovidInfoController c;

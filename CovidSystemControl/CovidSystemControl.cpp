@@ -1,7 +1,4 @@
 #include "CovidSystemControl.h"
-#include "qfile.h"
-#include "qtranslator.h" 
-#include "qdesktopwidget.h"
 
 
 CovidSystemControl::CovidSystemControl(CovidInfoController* covidInfoController, QWidget* parent) :
@@ -12,22 +9,29 @@ CovidSystemControl::CovidSystemControl(CovidInfoController* covidInfoController,
     ui->setupUi(this);
     this->initStyle();
     this->initTranslator();
+
+    ui->txtMain->hide();
+    ui->pushButton_release->hide();
+    ui->pushButton_cancel->hide();
+    ui->label->setFont(QFont(RuiZi, 12));
+    ui->label->setText("常态化疫情分析平台设备管理系统");
+    dynamic_cast<QGridLayout*>(ui->centralwidget->layout())->setColumnStretch(1, 1);
+    
+
     connect(controller, SIGNAL(updateAbnormalFinished()), this, SLOT(initTableWidget()));
     connect(controller, SIGNAL(initialAreaFinished()), this, SLOT(initTreeWidget()));
     ui->tabWidget->setCurrentIndex(0);
+    this->initListWidget();
+    QObject::connect(ui->listWidget, &QListWidget::currentRowChanged, this, &CovidSystemControl::listChanged);
+    QObject::connect(ui->tabWidget, &QTabWidget::currentChanged, this, &CovidSystemControl::tabChanged);
+
+    ui->txtMain->setFont(QFont(RuiZi, 18));
+    ui->txtMain->setAlignment(Qt::AlignHCenter);
 }
 
 CovidSystemControl::~CovidSystemControl()
 {
     delete ui;
-}
-
-void CovidSystemControl::initForm()
-{
-    /*this->initTableWidget();
-    this->initTreeWidget();
-    this->initListWidget();
-    this->initOther();*/
 }
 
 void CovidSystemControl::initStyle()
@@ -41,6 +45,8 @@ void CovidSystemControl::initStyle()
         qApp->setStyleSheet(qss);
         file.close();
     }
+    RuiZi = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont("./other/ttf/RuiZi.ttf")).at(0);
+
 }
 
 void CovidSystemControl::initTranslator()
@@ -61,16 +67,16 @@ void CovidSystemControl::initTableWidget()
     //设置列数和列宽
     int width = qApp->desktop()->availableGeometry().width() - 120;
     ui->tableWidget->setColumnCount(5);
-    ui->tableWidget->setColumnWidth(0, width * 0.06);
-    ui->tableWidget->setColumnWidth(1, width * 0.10);
-    ui->tableWidget->setColumnWidth(2, width * 0.06);
-    ui->tableWidget->setColumnWidth(3, width * 0.10);
-    ui->tableWidget->setColumnWidth(4, width * 0.15);
+    ui->tableWidget->setColumnWidth(0, width * 0.15);
+    ui->tableWidget->setColumnWidth(1, width * 0.15);
+    ui->tableWidget->setColumnWidth(2, width * 0.15);
+    ui->tableWidget->setColumnWidth(3, width * 0.3);
+    ui->tableWidget->setColumnWidth(4, width * 0.3);
     ui->tableWidget->verticalHeader()->setDefaultSectionSize(25);
 
     //设置表头信息
     QStringList headText;
-    headText << "省/市" << "市/区" << "地区" << "内容" << "时间";
+    headText << "省" << "市" << "区县" << "地区" << "内容";
     ui->tableWidget->setHorizontalHeaderLabels(headText);
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -79,17 +85,28 @@ void CovidSystemControl::initTableWidget()
     ui->tableWidget->verticalHeader()->setVisible(false);
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
     ui->tableWidget->setRowCount(300);
+    ui->tableWidget->verticalHeader()->setDefaultSectionSize(50);
+
+    
+    for (int i = 0; i < 5; i++)
+        ui->tableWidget->horizontalHeaderItem(i)->setFont(QFont(RuiZi, 12, 75));
+
 
     QVector<Abnormal*>* abnormalInfo = controller->getAbnormalInfo();
+    ui->tableWidget->clearContents();
     //视图显示
     for (int i = 0; i < abnormalInfo->size(); i++)
     {
-        ui->tableWidget->setRowHeight(i, 24);
         ui->tableWidget->setItem(i, 0, new QTableWidgetItem(abnormalInfo->at(i)->Province));
         ui->tableWidget->setItem(i, 1, new QTableWidgetItem(abnormalInfo->at(i)->City));
         ui->tableWidget->setItem(i, 2, new QTableWidgetItem(abnormalInfo->at(i)->County));
         ui->tableWidget->setItem(i, 3, new QTableWidgetItem(abnormalInfo->at(i)->District));
         ui->tableWidget->setItem(i, 4, new QTableWidgetItem(abnormalInfo->at(i)->Info));
+        for (int j = 0; j < 5; j++)
+        {
+            ui->tableWidget->item(i, j)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            ui->tableWidget->item(i, j)->setFont(QFont(RuiZi, 12));
+        }
     }
 }
 
@@ -155,38 +172,57 @@ void CovidSystemControl::treeClicked(QTreeWidgetItem* clickedItem, int index)
 {
     if (clickedItem->parent() && clickedItem->parent()->parent())
     {
-        qDebug() << clickedItem->parent()->parent()->text(index) << clickedItem->parent()->text(index) << clickedItem->text(index);
+        select = controller->findAbnormalInfo(clickedItem->text(index));
+        ui->listWidget->clear();
+        if (select != NULL)
+        {
+            for (int i = 0; i < select->size(); i++)
+            {
+                ui->listWidget->addItem("\t\t" + select->at(i)->Province + "\t" + select->at(i)->City + "\t" + select->at(i)->County + "\t" + select->at(i)->District + "\t\t" + select->at(i)->Info);
+            }
+        }
     }
 }
 
 void CovidSystemControl::initListWidget()
 {
-    QStringList items;
-    for (int i = 1; i <= 30; i++) {
-        items << QString("元素%1").arg(i);
-    }
-
-    ui->listWidget->addItems(items);
-    ui->cbox1->addItems(items);
-    ui->cbox2->addItems(items);
+    ui->listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
 }
 
-void CovidSystemControl::initOther()
+void CovidSystemControl::listChanged(int row)
 {
-    ui->rbtn1->setChecked(true);
-    ui->ck2->setChecked(true);
-    ui->ck3->setCheckState(Qt::PartiallyChecked);
-    ui->horizontalSlider->setValue(88);
-
-    ui->tab9->setStyleSheet("QPushButton{font:20pt;}");
-    ui->widgetVideo->setStyleSheet("QLabel{font:20pt;}");
-  
-    ui->widgetVideo->setProperty("video", true);
-
-    QList<QLabel*> labChs = ui->widgetVideo->findChildren<QLabel*>();
-    foreach(QLabel * lab, labChs) {
-        lab->setFocusPolicy(Qt::StrongFocus);
+    qDebug() << row;
+    if (row >= 0)
+    {
+        ui->txtMain->clear();
+        now = select->at(row);
+        ui->txtMain->setText(now->Province + "\t" + now->City + "\t" + now->County + "\t" + now->District + "\t\t" + now->Info);
+    }
+    else
+    {
+        ui->txtMain->clear();
     }
 }
 
+void CovidSystemControl::tabChanged(int index)
+{
+    switch (index)
+    {
+    case 0:
+        ui->txtMain->hide();
+        ui->pushButton_release->hide();
+        ui->pushButton_cancel->hide();
+        break;
+    case 1:
+        ui->txtMain->show();
+        ui->pushButton_release->show();
+        ui->pushButton_cancel->show();
+        break;
+    default:
+        break;
+    }
+}
 
+void CovidSystemControl::titleShow()
+{
+}
