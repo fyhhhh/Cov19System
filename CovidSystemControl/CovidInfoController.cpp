@@ -16,6 +16,21 @@ void CovidInfoController::updateAbnormalInfo()
     Q_ASSERT(connRet);
     request.setUrl(QUrl(IP_PORT + "/abnormal"));
     QNetworkReply* reply = naManager->get(request);
+    qDebug() << "GET " << request.url();
+}
+
+void CovidInfoController::updateReportInfo(const QString province, const QString city, const QString county)
+{
+    if (province != "选择省" && city != "选择市" && county != "选择县")
+    {
+        QNetworkRequest request;
+        QNetworkAccessManager* naManager = new QNetworkAccessManager(this);
+        QMetaObject::Connection connRet = QObject::connect(naManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(updateReportInfoFinished(QNetworkReply*)));
+        Q_ASSERT(connRet);
+        request.setUrl(QUrl(IP_PORT + "/reports?province=" + province + "&city=" + city + "&county=" + county));
+        QNetworkReply* reply = naManager->get(request);
+        qDebug() << "GET " << request.url();
+    }
 }
 
 //GET /abnormal请求完成
@@ -36,10 +51,31 @@ void CovidInfoController::updateAbnormalInfoFinished(QNetworkReply* reply)
     }
     else {
         returnJson = QString::fromStdString(reply->readAll().toStdString());
+        parseJson(QByteArray::fromStdString(returnJson.toStdString()), &abnormalInfo);
+        emit updateAbnormalFinished();
     }
+}
 
-    parseJson(QByteArray::fromStdString(returnJson.toStdString()), &abnormalInfo);
-    emit updateAbnormalFinished();
+void CovidInfoController::updateReportInfoFinished(QNetworkReply* reply)
+{
+    QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    if (statusCode.isValid())
+        qDebug() << "status code=" << statusCode.toInt();
+
+    QVariant reason = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
+    if (reason.isValid())
+        qDebug() << "reason=" << reason.toString();
+
+    QNetworkReply::NetworkError err = reply->error();
+    QString returnJson;
+    if (err != QNetworkReply::NoError) {
+        qDebug() << "Failed: " << reply->errorString();
+    }
+    else {
+        returnJson = QString::fromStdString(reply->readAll().toStdString());
+        parseJson(QByteArray::fromStdString(returnJson.toStdString()), &reportInfo);
+        emit updateReportFinished();
+    }
 }
 
 //发送GET /area请求更新Controller
@@ -53,18 +89,93 @@ void CovidInfoController::initialAreaInfo()
     QNetworkReply* reply = naManager->get(request);
 }
 
-QVector<Abnormal*>* CovidInfoController::findAbnormalInfo(QString& county)
+QVector<Abnormal*>* CovidInfoController::findAbnormalInfo(QString& province, QString& city, QString& county)
 {
     QVector<Abnormal*>* res = new QVector<Abnormal*>;
     res->clear();
     for (int i = 0; i < abnormalInfo.size(); i++)
     {
-        if (abnormalInfo.at(i)->County == county)
+        if (abnormalInfo.at(i)->Province == province && abnormalInfo.at(i)->City == city && abnormalInfo.at(i)->County == county)
         {
             res->push_back(abnormalInfo[i]);
         }
     }
     return res->empty() ? NULL : res;
+}
+
+void CovidInfoController::releaseReport(Abnormal* now)
+{
+    QJsonObject postJson
+    {
+        {"Province", now->Province},
+        {"City", now->City},
+        {"County" ,now->County},
+        {"District" ,now->District},
+        {"Info" ,now->Info},
+        {"Time" ,now->Time},
+        {"Device" , now->Device.toInt()}
+    };
+    QNetworkRequest request;
+    QNetworkAccessManager* naManager = new QNetworkAccessManager(this);
+    QMetaObject::Connection connRet = QObject::connect(naManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(postFinished(QNetworkReply*)));
+    Q_ASSERT(connRet);
+
+    request.setUrl(QUrl(IP_PORT + "/reports"));
+
+    QJsonDocument document = QJsonDocument(postJson);
+    QByteArray postData = document.toJson(QJsonDocument::Compact);
+    QNetworkReply* reply = naManager->post(request, postData);
+    qDebug() << "POST " << request.url();
+}
+
+void CovidInfoController::cancelAbnormal(Abnormal* now)
+{
+    QJsonObject postJson
+    {
+        {"Province", now->Province},
+        {"City", now->City},
+        {"County" ,now->County},
+        {"District" ,now->District},
+        {"Info" ,now->Info},
+        {"Time" ,now->Time},
+        {"Device" , now->Device.toInt()}
+    };
+    QNetworkRequest request;
+    QNetworkAccessManager* naManager = new QNetworkAccessManager(this);
+    QMetaObject::Connection connRet = QObject::connect(naManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(postFinished(QNetworkReply*)));
+    Q_ASSERT(connRet);
+
+    request.setUrl(QUrl(IP_PORT + "/abnormal_delete"));
+
+    QJsonDocument document = QJsonDocument(postJson);
+    QByteArray postData = document.toJson(QJsonDocument::Compact);
+    QNetworkReply* reply = naManager->post(request, postData);
+    qDebug() << "POST " << request.url();
+}
+
+void CovidInfoController::relieveReport(Report* now2)
+{
+    QJsonObject postJson
+    {
+        {"Province", now2->Province},
+        {"City", now2->City},
+        {"County" ,now2->County},
+        {"District" ,now2->District},
+        {"Info" ,now2->Info},
+        {"Time" ,now2->Time},
+        {"Device" , now2->Device.toInt()}
+    };
+    QNetworkRequest request;
+    QNetworkAccessManager* naManager = new QNetworkAccessManager(this);
+    QMetaObject::Connection connRet = QObject::connect(naManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(postFinished(QNetworkReply*)));
+    Q_ASSERT(connRet);
+
+    request.setUrl(QUrl(IP_PORT + "/reports_delete"));
+
+    QJsonDocument document = QJsonDocument(postJson);
+    QByteArray postData = document.toJson(QJsonDocument::Compact);
+    QNetworkReply* reply = naManager->post(request, postData);
+    qDebug() << "POST " << request.url();
 }
 
 void CovidInfoController::initialAreaInfoFinished(QNetworkReply* reply)
@@ -85,9 +196,30 @@ void CovidInfoController::initialAreaInfoFinished(QNetworkReply* reply)
     else {
         returnJson = QString::fromStdString(reply->readAll().toStdString());
     }
-
     parseJson(QByteArray::fromStdString(returnJson.toStdString()), areaInfo);
     emit initialAreaFinished();
+}
+
+void CovidInfoController::postFinished(QNetworkReply* reply)
+{
+    QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    if (statusCode.isValid())
+        qDebug() << "status code=" << statusCode.toInt();
+
+    QVariant reason = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
+    if (reason.isValid())
+        qDebug() << "reason=" << reason.toString();
+
+    QNetworkReply::NetworkError err = reply->error();
+    QString returnJson;
+    if (err != QNetworkReply::NoError) {
+        qDebug() << "Failed: " << reply->errorString();
+    }
+    else {
+        qDebug() << reply->readAll();
+    }
+
+    this->updateAbnormalInfo();
 }
 
 template <class T>
@@ -119,6 +251,11 @@ void parseJson(QByteArray& json, QVector<T*>* res)
                             if (subValue.isString())
                             {
                                 QString strName = subValue.toString();
+                                newInfo->set(T::getNames().at(i), strName);
+                            }
+                            else if (subValue.isDouble())
+                            {
+                                QString strName = QString::number(subValue.toInt());
                                 newInfo->set(T::getNames().at(i), strName);
                             }
                         }

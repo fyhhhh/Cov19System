@@ -3,7 +3,8 @@
 #include "Information.hpp"
 #include "CovidInfoController.h"
 
-const QVector<QString> Abnormal::names = QVector<QString>({ "Province","City","County","District","Info" });
+const QVector<QString> Abnormal::names = QVector<QString>({ "Province","City","County","District","Info","Time","Device" });
+const QVector<QString> Report::names = QVector<QString>({ "Province","City","County","District","Info","Time","Device" });
 const QVector<QString> Area::names = QVector<QString>({ "Province","City","County" });
 
 int main(int argc, char *argv[])

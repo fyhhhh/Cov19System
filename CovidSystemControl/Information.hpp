@@ -24,11 +24,13 @@ public:
     QString County;
     QString District;
     QString Info;
+    QString Time;
+    QString Device;
     const static QVector<QString> names;
     
     virtual bool isVaild()
     {
-        if (!Province.isEmpty() && !City.isEmpty() && !County.isEmpty() && !District.isEmpty() && !Info.isEmpty())
+        if (!Province.isEmpty() && !City.isEmpty() && !County.isEmpty() && !District.isEmpty() && !Info.isEmpty() && !Time.isEmpty() && !Device.isEmpty())
         {
             return true;
         }
@@ -41,10 +43,55 @@ public:
         if (key == "County") County = value;
         if (key == "District") District = value;
         if (key == "Info") Info = value;
+        if (key == "Time") Time = value;
+        if (key == "Device") Device = value;
+
     }
     virtual void show()
     {
-        qDebug() << Province << City << County << District << Info;
+        qDebug() << Province << City << County << District << Info << Time << Device;
+    }
+
+    static QVector<QString> getNames()
+    {
+        return names;
+    }
+};
+
+class Report :public Information
+{
+public:
+    QString Province;
+    QString City;
+    QString County;
+    QString District;
+    QString Info;
+    QString Time;
+    QString Device;
+    const static QVector<QString> names;
+
+    virtual bool isVaild()
+    {
+        if (!Province.isEmpty() && !City.isEmpty() && !County.isEmpty() && !District.isEmpty() && !Info.isEmpty() && !Time.isEmpty() && !Device.isEmpty())
+        {
+            return true;
+        }
+        return false;
+    }
+    virtual void set(QString key, QString value)
+    {
+        if (key == "Province") Province = value;
+        if (key == "City") City = value;
+        if (key == "County") County = value;
+        if (key == "District") District = value;
+        if (key == "Info") Info = value;
+        if (key == "Time") Time = value;
+        if (key == "Device") Device = value;
+
+    }
+    virtual void show()
+    {
+        qDebug() << Province << City << County << District << Info << Time << Device;
     }
 
     static QVector<QString> getNames()

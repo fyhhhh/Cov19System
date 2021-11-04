@@ -75,6 +75,8 @@ type Report struct {
    County      string
    District    string
    Info        string
+   Time        string
+   Device      int32
 }
 
 type Abnormal struct {
@@ -84,6 +86,8 @@ type Abnormal struct {
    County      string
    District    string
    Info        string
+   Time        string
+   Device      int32
 }
 
 type Province struct {
@@ -282,7 +286,7 @@ func main(){
       c.BindJSON(&json)
       c.String(200,"received")
       var abnormal Abnormal
-      db.Model(&Abnormal{}).Where("province=? and city=? and county=? and district=? and info=?",json["Province"],json["City"],json["County"],json["District"],json["Info"]).Delete(&abnormal)
+      db.Model(&Abnormal{}).Where("province=? and city=? and county=? and district=? and info=? and time=? and device=?",json["Province"],json["City"],json["County"],json["District"],json["Info"],json["Time"],json["Device"]).Delete(&abnormal)
       db.Model(&Report{}).Create(json)
    })
 
@@ -291,7 +295,7 @@ func main(){
       c.BindJSON(&json)
       c.String(200,"received")
       var report Report
-      db.Where("province=? and city=? and county=? and district=? and info=?",json["Province"],json["City"],json["County"],json["District"],json["Info"]).Delete(&report)
+      db.Where("province=? and city=? and county=? and district=? and info=? and time=? and device=?",json["Province"],json["City"],json["County"],json["District"],json["Info"],json["Time"],json["Device"]).Delete(&report)
    })
 
    r.GET("/abnormal", func(c *gin.Context) {
@@ -321,7 +325,15 @@ func main(){
       c.String(200,"received")
       db.Model(&Abnormal{}).Create(json)
    })
-   
+
+   r.POST("/abnormal_delete", func(c *gin.Context) {
+      json := make(map[string]interface{}) //注意该结构接受的内容
+      c.BindJSON(&json)
+      c.String(200,"received")
+      var abnormal Abnormal
+      db.Where("province=? and city=? and county=? and district=? and info=? and time=? and device=?",json["Province"],json["City"],json["County"],json["District"],json["Info"],json["Time"],json["Device"]).Delete(&abnormal)
+   })
+
    r.GET("/area", func(c *gin.Context) {
       provinceName := c.Query("province")
       cityName := c.Query("city")
