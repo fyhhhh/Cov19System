@@ -13,6 +13,8 @@ headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36"
 }
 
+username="root"
+passwd="123456"
 
 def get_province_data():
     conn = None
@@ -48,7 +50,7 @@ def get_province_data():
                     #Location = str(detail["location"]['lat']) + " " + str(detail["location"]['lng'])
                     lat = str(detail["location"]["lat"])
                     lng = str(detail["location"]["lng"])
-                    print(Province, City, District, Address, Title, Tel, lat, lng)
+                    #print(Province, City, District, Address, Title, Tel, lat, lng)
                     # 插入数据
                     try:
                         sql = "insert into hospitals(province, city, district, address, title, tel, lat, lng) values('%s','%s','%s','%s','%s','%s','%s', '%s')" % (
@@ -149,7 +151,7 @@ def get_tencent_data():
 
 def get_conn():
     # 建立连接
-    conn = pymysql.connect(host="localhost", user="root", password="zxy0517", db="Cov19", charset="utf8")
+    conn = pymysql.connect(host="localhost", user=username, password=passwd, db="Cov19", charset="utf8")
     # c创建游标
     cursor = conn.cursor()
     return conn, cursor
@@ -195,7 +197,7 @@ def insert_history():
         dic = get_tencent_data()[0]  # 0代表历史数据字典
         print(f"{time.asctime()}开始插入历史数据")
         conn, cursor = get_conn()
-        sql = "insert into historys values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        sql = "insert into histories values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         for k, v in dic.items():
             cursor.execute(sql, [k, v.get("confirm"), v.get("confirm_add"), v.get("suspect"),
                                  v.get("suspect_add"), v.get("heal"), v.get("heal_add"),
@@ -216,8 +218,8 @@ def update_history():
         dic = get_tencent_data()[0]  # 0代表历史数据字典
         print(f"{time.asctime()}开始更新历史数据")
         conn, cursor = get_conn()
-        sql = "insert into historys values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        sql_query = "select confirm from historys where ds=%s"
+        sql = "insert into histories values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        sql_query = "select confirm from histories where ds=%s"
         for k, v in dic.items():
             if not cursor.execute(sql_query, k):
                 cursor.execute(sql, [k, v.get("confirm"), v.get("confirm_add"), v.get("suspect"),

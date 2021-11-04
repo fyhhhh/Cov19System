@@ -1,6 +1,42 @@
 # **常态化疫情分析平台**
 
+https://github.com/fyhhhh/Cov19System
+
+获取最新代码，请选择master分支
+
+获取最新版本程序，请选择release tag中发布的程序及附件
+
+**本系统仅用于西北工业大学计算机学院2021—2022年秋学期应用综合实验设计作业；**
+
+**版权归原作者所有，未经原作者允许不得用于其它途径，否则将视为侵权；**
+
+**转载或者引用部分内容请注明来源及原作者；**
+
+**对于不遵守此声明或者其他违法使用本文内容者，本人依法保留追究权等。**
+
+### 文件导航
+
+| **目录**             | **内容**                                                     |
+| -------------------- | ------------------------------------------------------------ |
+| /CovidSystemBackend  | 基于Go语言实现的Web服务端及数据库交互模块——Goland2021项目    |
+| /CovidSystemControl  | 基于C++语言实现的Windows-PC可控管理端模块——Virtual Studio 2019项目，基于QT5扩展 |
+| /CovidSystemFrontend | 基于JavaScript实现的Web网页客户端及用户交互模块              |
+| /CovidSystemLinux    | 基于C语言实现的Linux嵌入式终端模块——Linux-c语言源文件        |
+| /crawler             | 基于Python语言实现的数据获取爬虫模块——python文件             |
+| /SQLData             | 基于MySQL数据库的数据存储模块——数据库备份文件                |
+
+
+
 ## 更新日志
+
+##### 2021.11.4 23:00
+
+--update--
+
+1. CovidSystemLinux加入了项目
+2. 更新了CovidSystemControl和CovidSystemLinux两部分的文档
+
+-----
 
 ##### 2021.11.4 18:00
 
@@ -347,10 +383,10 @@ RETURN JSON:
 
 #### 4.1.4 核酸检测地点查询
 
-GET [IP]:[PORT]/hospitals?province=[省/直辖市]&city=[市/直辖市区]
+GET [IP]:[PORT]/hospitals?province=[省/直辖市]&city=[市/直辖市]&district=[区县]
 
 ```json
-GET localhost:8080/hospitals?province=陕西省&city=西安市
+GET localhost:8080/hospitals?province=陕西省&city=西安市&district=长安区
 RETURN JSON:
 [
     {
@@ -369,7 +405,7 @@ RETURN JSON:
 
 ##### 4.1.5 突发疫情信息查询
 
-GET [IP]:[PORT]/reports?province=[省/直辖市]&city=[市/直辖市区]&county=[区县/直辖市同city]
+GET [IP]:[PORT]/reports?province=[省/直辖市]&city=[市/直辖市]&county=[区县]
 
 ```json
 GET localhost:8080/reports?province=陕西省&city=西安市&county=长安区
@@ -396,7 +432,7 @@ RETURN JSON:
 
 从abnormal表获取信息：
 
-GET [IP]:[PORT]/abnormal (?province=[省/直辖市]&city=[市/直辖市区]&county=[区县/直辖市同city])
+GET [IP]:[PORT]/abnormal (?province=[省/直辖市]&city=[市/直辖市]&county=[区县])
 
 ```json
 GET localhost:8080/abnormal?province=陕西省&city=西安市&county=碑林区
@@ -471,6 +507,10 @@ POST JSON:
     "Device": 188
 }
 ```
+
+##### 4.2.5 突发疫情信息查询
+
+同4.1.5节内容
 
 ### 4.3 提供给嵌入式终端的接口
 
@@ -568,29 +608,83 @@ RETURN JSON:
 
 ## 6 **基于C语言实现的Linux嵌入式终端模块**
 
-本模块使用Linux纯命令行系统模拟嵌入式设备的终端模块，这将模拟体温监测终端，实际使用中介入体温传感器即可
+本模块使用Linux命令行模拟嵌入式设备的终端模块，这将模拟体温监测终端，实际使用中接入体温传感器提供数据替代模拟数据
+
+CovidSystemLinux程序在无参数执行时显示帮助信息：
+
+<img  src="./picture/帮助信息.png" align='left'/>
 
 ### 6.1 设备位置初始设置
 
-### 6.2 异常信息POST
+设备编号及位置信息（省、市、区县、地区）在配置文件setting.cfg中
 
-### 6.3 体温传感器模拟
+带setting参数执行将进入设置模式：
+
+<img  src="./picture/设置配置.png" align='left'/>
+
+### 6.2 体温传感器模拟
+
+使用简单的命令行输入代替体温传感器的温度数据
+
+带start参数执行将进入模拟模式，循环输入模拟体温数据
+
+<img  src="./picture/模拟数据.png" align='left'/>
+
+### 6.3 异常信息POST
+
+当体温大于等于37.5时，将向服务器报告异常信息
+
+通过构造发送HTTP1.1 POST的方式与数据服务器交互
+
+服务器IP及端口保存在IP.cfg配置文件中
+
+除了配置中的信息外，还将自动获取异常出现时间
+
+<img  src="./picture/异常汇报.png" align='left'/>
 
 
 
 ## 7 **基于C++语言实现的Windows-PC可控管理端模块**
 
-本模块面向系统管理端，对收集到的信息进行对比和管理，使用C++QT5框架实现
+本模块作为管理端，通过人工筛选审核终端嵌入式设备发送的异常信息，进行发布、撤销、解除操作
 
-### 7.1 异常信息处理
+本模块基于C++QT5框架实现，对接基于Go语言实现的Web服务端及数据库交互模块，通过HTTP请求响应与数据服务器进行交互
 
-### 7.2 预警信息推送
+本模块采用MVC设计模式增加代码复用率，增强维护性和可扩展性，Model类（本例中为Information类及其子类）负责存储数据以及定义如何操作这些数据，View类（本例中为CovidSystemControl类）负责展示而且允许用户编辑来自应用程序的Model对象，Controller类（本例中为CovidInfoController类）负责传递数据
 
-### 7.3 预警信息清楚
+程序主页面由三个分页面（Tab）组成，下面详述各分页面：
 
-### 7.4 仪表盘
+### 7.1 异常信息总览
 
-### 7.5 日历记录
+<img src="./picture/数据总览.png" style="zoom:50%;" />
+
+本页面为系统首页，无交互功能，可作为主页屏幕显示系统中所有未操作的异常信息
+
+页面有滚动条，可通过鼠标滚轮上下滑动显示更多
+
+### 7.2 预警信息发布或撤销
+
+<img src="./picture/发布撤销.png" style="zoom:50%;" />
+
+本页面的功能为选择某一信息，并进行发布或撤销操作
+
+若发布，信息将进入reports表；若撤销，信息将被删除
+
+页面下半部分为筛选模块，实现省-市-县三级树状列表筛选，而后在右侧列表列出所选县级详细信息
+
+页面上半部分为操作交互模块，从列表中选中的县级详细信息将在上方文本框中显示，随后可以使用发布/撤销按钮交互
+
+### 7.3 预警信息解除
+
+<img src="./picture/警报解除.png" style="zoom:50%;" />
+
+本页面的功能为选择某一信息，进行解除操作
+
+信息来自于reports表，即已发布的异常信息，若解除，信息将被删除
+
+页面下半部分为筛选模块，通过省-市-县三级comboBox下拉菜单筛选，而后在下方列表列出详细信息
+
+页面上半部分为操作交互模块，从列表中选中的县级已发布信息的详细信息将在上方文本框中显示，随后可以使用解除按钮交互
 
 
 

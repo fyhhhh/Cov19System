@@ -189,7 +189,7 @@ void CovidSystemControl::updateListWidget2()
     {
         for (int i = 0; i < select2->size(); i++)
         {
-            ui->listWidget_2->addItem(select2->at(i)->Time + "\t\t" + select2->at(i)->Province + "\t" + select2->at(i)->City + "\t" + select2->at(i)->County + "\t" + select2->at(i)->District + "\t\t" + select2->at(i)->Info);
+            ui->listWidget_2->addItem(select2->at(i)->Time + "\t\t" + select2->at(i)->Province + select2->at(i)->City + select2->at(i)->County + select2->at(i)->District + select2->at(i)->Info);
             ui->listWidget_2->item(i)->setSizeHint(QSize(ui->listWidget_2->width(), qApp->desktop()->availableGeometry().height() * 0.05));
             ui->listWidget_2->item(i)->setFont(QFont(RuiZi, 18));
         }

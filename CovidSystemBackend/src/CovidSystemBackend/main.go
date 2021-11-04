@@ -249,13 +249,14 @@ func main(){
    r.GET("/hospitals", func(c *gin.Context) {
       provinceName := c.Query("province")
       cityName := c.Query("city")
-      if provinceName == "" || cityName == "" {
+	  districtName := c.Query("district")
+      if provinceName == "" || cityName == "" || districtName == ""{
          c.JSON(200, gin.H{
             "error":"select province and city needed",
          })
       } else {
          var hospitals []Hospital
-         result := db.Where("Province=? and City=?",provinceName,cityName).Find(&hospitals)
+         result := db.Where("Province=? and City=? and District=?",provinceName,cityName,districtName).Find(&hospitals)
          if result.Error != nil {
             fmt.Println("Hospitals select failed")
          }
