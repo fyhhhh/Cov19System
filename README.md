@@ -612,9 +612,9 @@ RETURN JSON:
 
 CovidSystemLinux程序在无参数执行时显示帮助信息：
 
-<img  src="./picture/帮助信息.png" align='left'/>
+<img  src="./picture/帮助信息.png"/>
 
-
+<br/>
 
 ### 6.1 设备位置初始设置
 
@@ -622,9 +622,9 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 
 带setting参数执行将进入设置模式：
 
-<img  src="./picture/设置配置.png" align='left'/>
+<img  src="./picture/设置配置.png"/>
 
-
+<br/>
 
 ### 6.2 体温传感器模拟
 
@@ -632,9 +632,9 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 
 带start参数执行将进入模拟模式，循环输入模拟体温数据
 
-<img  src="./picture/模拟数据.png" align='left'/>
+<img  src="./picture/模拟数据.png"/>
 
-
+<br/>
 
 ### 6.3 异常信息POST
 
@@ -646,9 +646,9 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 
 除了配置中的信息外，还将自动获取异常出现时间
 
-<img  src="./picture/异常汇报.png" align='left'/>
+<img  src="./picture/异常汇报.png"/>
 
-
+<br/>
 
 
 
