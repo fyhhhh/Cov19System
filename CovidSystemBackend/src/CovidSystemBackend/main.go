@@ -173,10 +173,9 @@ func main(){
                var cityTotals []CityTotal
                var result *gorm.DB
                if newest == "true" {
-                  subQuery := db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,city,update_time")
-                  result = db.Table("(?) as t",subQuery).Select("max(update_time)as update_time,province,city,total_now,total_confirm_add,total_heal,total_dead").Group("city").Find(&cityTotals)
-               } else {
-                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=?", provinceName).Group("province,city,update_time").Find(&cityTotals)
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-(heal)-(dead)<0,0,(confirm)-(heal)-(dead)) as total_now,(confirm_add) as total_confirm_add,(heal) as total_heal,(dead) as total_deadfrom").Where("province=? and update_time in (select max(update_time) from details)",provinceName).Group("city").Find(&cityTotals)
+			   } else {
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-(heal)-(dead)<0,0,(confirm)-(heal)-(dead)) as total_now,(confirm_add) as total_confirm_add,(heal) as total_heal,(dead) as total_dead").Where("province=?", provinceName).Group("province,city,update_time").Find(&cityTotals)
                }
                if result.Error != nil {
                   fmt.Println("Details select failed")
@@ -186,9 +185,9 @@ func main(){
                var cityTotals []CityTotal
                var result *gorm.DB
                if newest == "true" {
-                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Order("update_time desc").First(&cityTotals)
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-(heal)-(dead)<0,0,(confirm)-(heal)-(dead)) as total_now,(confirm_add) as total_confirm_add,(heal) as total_heal,(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Order("update_time desc").First(&cityTotals)
                } else {
-                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-sum(heal)-sum(dead)<0,0,(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Find(&cityTotals)
+                  result = db.Model(&Detail{}).Select("update_time,province,city,if((confirm)-(heal)-(dead)<0,0,(confirm)-(heal)-(dead)) as total_now,(confirm_add) as total_confirm_add,(heal) as total_heal,(dead) as total_dead").Where("province=? and city=?", provinceName, cityName).Group("province,city,update_time").Find(&cityTotals)
                }
                if result.Error != nil {
                   fmt.Println("Details select failed")
@@ -201,7 +200,7 @@ func main(){
                var result *gorm.DB
                if newest == "true" {
                   subQuery := db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Group("province,update_time")
-                  result = db.Table("(?) as t",subQuery).Select("max(update_time)as update_time,province,total_now,total_confirm_add,total_heal,total_dead").Group("province").Find(&provinceTotals)
+				  result = db.Table("(?) as t",subQuery).Select("update_time,province,total_now,total_confirm_add,total_heal,total_dead").Where("update_time in (select max(update_time) from details) ").Group("province").Find(&provinceTotals)
                } else {
                   result = db.Model(&Detail{}).Select("update_time,province,if(sum(confirm)-sum(heal)-sum(dead)<0,0,sum(confirm)-sum(heal)-sum(dead)) as total_now,sum(confirm_add) as total_confirm_add,sum(heal) as total_heal,sum(dead) as total_dead").Group("province,update_time").Find(&provinceTotals)
                }
