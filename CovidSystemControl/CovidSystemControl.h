@@ -44,9 +44,27 @@ private slots:
     void treeClicked(QTreeWidgetItem* clickedItem, int index);
     void listChanged(int row);
     void tabChanged(int index);
-    inline void listShow();
-    inline void treeShow();
-    inline void cancelPageShow();
+    inline void listShow()
+    {
+        ui->txtMain->hide();
+        ui->pushButton_release->hide();
+        ui->pushButton_cancel->hide();
+        ui->pushButton_relieve->hide();
+    }
+    inline void treeShow()
+    {
+        ui->txtMain->show();
+        ui->pushButton_release->show();
+        ui->pushButton_cancel->show();
+        ui->pushButton_relieve->hide();
+    }
+    inline void cancelPageShow()
+    {
+        ui->txtMain->show();
+        ui->pushButton_release->hide();
+        ui->pushButton_cancel->hide();
+        ui->pushButton_relieve->show();
+    }
     inline void closeAll() { this->close(); }
     void releaseButtonPush();
     void cancelButtonPush();

@@ -201,11 +201,10 @@ void CovidSystemControl::listChanged2(int row)
     select2 = &(controller->getReportInfo());
     if (row >= 0)
     {
-        qDebug() << row << "with" << select2->size();
         now2 = select2->at(row);
-        static QString messageTitle = "已发布消息：检测设备" + now2->Device + "报告：\n" + now2->Time;
-        static QString message = "\n" + now2->Province + "\t" + now2->City + "\t" + now2->County + "\t" + now2->District + "\t\t" + now2->Info;
-        static QString messageTile = "\n请选择是否解除";
+        QString messageTitle = "已发布消息：检测设备" + now2->Device + "报告：\n" + now2->Time;
+        QString message = "\n" + now2->Province + "\t" + now2->City + "\t" + now2->County + "\t" + now2->District + "\t\t" + now2->Info;
+        QString messageTile = "\n请选择是否解除";
         ui->txtMain->setText(messageTitle + message + messageTile);
         cancelPageShow();
     }
@@ -389,29 +388,6 @@ void CovidSystemControl::tabChanged(int index)
     default:
         break;
     }
-}
-
-inline void CovidSystemControl::listShow()
-{
-    ui->txtMain->hide();
-    ui->pushButton_release->hide();
-    ui->pushButton_cancel->hide();
-    ui->pushButton_relieve->hide();
-}
-inline void CovidSystemControl::treeShow()
-{
-    ui->txtMain->show();
-    ui->pushButton_release->show();
-    ui->pushButton_cancel->show();
-    ui->pushButton_relieve->hide();
-}
-
-inline void CovidSystemControl::cancelPageShow()
-{
-    ui->txtMain->show();
-    ui->pushButton_release->hide();
-    ui->pushButton_cancel->hide();
-    ui->pushButton_relieve->show();
 }
 
 void CovidSystemControl::releaseButtonPush()

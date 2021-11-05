@@ -9,10 +9,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QObject>
+#include <cstdio>
 #include "Information.hpp"
-
-const QString IP_PORT = "http://localhost:8080";
-
 
 class CovidInfoController :public QObject
 {
@@ -22,6 +20,8 @@ private:
     QVector<Abnormal*> abnormalInfo;
     QVector<Area*>* areaInfo;
     QVector<Report*> reportInfo;
+    QString IP_PORT;
+
 public:
     CovidInfoController();
 

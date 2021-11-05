@@ -1,6 +1,21 @@
 #include "CovidInfoController.h"
 CovidInfoController::CovidInfoController()
 {
+    FILE* fp = NULL;
+    char tmp[50];
+    fopen_s(&fp, "./IP.txt", "r");
+    if (fp != NULL)
+    {
+        fgets(tmp, 50, fp);
+        fclose(fp);
+    }
+    else
+    {
+        qDebug() << "IP.txt¶ÁÈ¡Ê§°Ü";
+    }
+    IP_PORT = QString::fromStdString(tmp);
+    qDebug() << "URL:" << IP_PORT;
+
     areaInfo = new QVector<Area*>;
     updateAbnormalInfo();
     initialAreaInfo();
