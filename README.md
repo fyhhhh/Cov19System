@@ -614,6 +614,8 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 
 <img  src="./picture/帮助信息.png" align='left'/>
 
+
+
 ### 6.1 设备位置初始设置
 
 设备编号及位置信息（省、市、区县、地区）在配置文件setting.cfg中
@@ -622,6 +624,8 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 
 <img  src="./picture/设置配置.png" align='left'/>
 
+
+
 ### 6.2 体温传感器模拟
 
 使用简单的命令行输入代替体温传感器的温度数据
@@ -629,6 +633,8 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 带start参数执行将进入模拟模式，循环输入模拟体温数据
 
 <img  src="./picture/模拟数据.png" align='left'/>
+
+
 
 ### 6.3 异常信息POST
 
@@ -641,6 +647,8 @@ CovidSystemLinux程序在无参数执行时显示帮助信息：
 除了配置中的信息外，还将自动获取异常出现时间
 
 <img  src="./picture/异常汇报.png" align='left'/>
+
+
 
 
 
