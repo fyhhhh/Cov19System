@@ -20,7 +20,7 @@ https://github.com/fyhhhh/Cov19System
 | -------------------- | ------------------------------------------------------------ |
 | /CovidSystemBackend  | 基于Go语言实现的Web服务端及数据库交互模块——Goland2021项目    |
 | /CovidSystemControl  | 基于C++语言实现的Windows-PC可控管理端模块——Virtual Studio 2019项目，基于QT5扩展 |
-| /CovidSystemFrontend | 基于JavaScript实现的Web网页客户端及用户交互模块              |
+| /CovidSystemFrontend | 基于JavaScript实现的Web网页客户端及用户交互模块——WebStorm项目 |
 | /CovidSystemLinux    | 基于C语言实现的Linux嵌入式终端模块——Linux-c语言源文件        |
 | /crawler             | 基于Python语言实现的数据获取爬虫模块——python文件             |
 | /SQLData             | 基于MySQL数据库的数据存储模块——数据库备份文件                |
@@ -28,6 +28,15 @@ https://github.com/fyhhhh/Cov19System
 
 
 ## 更新日志
+
+##### 2021.11.5
+
+--update--
+
+1. 加入了CovidSystemFrontend程序源码
+2. 文档更新基于JavaScript实现的Web网页客户端及用户交互模块
+
+------
 
 ##### 2021.11.4 23:00
 
@@ -602,7 +611,118 @@ RETURN JSON:
 
 ## 5 **基于JavaScript实现的Web网页客户端及用户交互模块**
 
-（待完善）
+### 5.1 总述
+
+​	本项目采用Vue-cli搭建整个前端页面。可以对接后端接口，进行疫情可视化分析以及相关信息的查询。
+
+##### 5.1.1 技术选型
+
+* 编程语言：JavaScript
+* js框架：vue.js
+* 路由：vue-router
+* 网络库：axios
+* UI框架：Element-UI，echart
+
+##### 5.1.2 页面概述
+
+​	整个前端分为一个主界面以及四个子界面，相应位置及功能如下所示：
+
+| 路由      | 功能                                         |
+| :-------- | :------------------------------------------- |
+| /         | 主界面的整体展示，负责相关页面的跳转         |
+| /map      | 展示全国的疫情数据以及历史趋势               |
+| /hospital | 查询核酸检测点的相关信息                     |
+| /route    | 通过定位当前位置，获取风险信息，进行风险评估 |
+| /riskarea | 展示全国中高风险地区，并提供条件检索         |
+
+### 5.2 功能展示
+
+##### 5.2.1 主界面
+
+​	采用了侧边栏-主要页面的布局方式，可以通过点击侧边栏，实现右侧页面的跳转。整体布局如下：
+
+<img src=".\picture\image-20211105110434669.png" alt="image-20211105110434669" style="zoom: 50%;" />
+
+​	为侧边栏每个按钮赋予路由跳转的功能，即可实现点击后的页面跳转，具体实现方式如下：
+
+```html
+<router-link to="/map" tag="el-menu-item" ><i class="el-icon-s-grid"/>疫情地图</router-link>
+<router-link to="/riskArea" tag="el-menu-item" ><i class="el-icon-s-flag"/>风险地区</router-link>
+<router-link to="/hospital" tag="el-menu-item" ><i class="el-icon-first-aid-kit"/>核酸检测点</router-link>
+<router-link to="/route" tag="el-menu-item" ><i class="el-icon-user-solid"/>个人流调</router-link>
+```
+
+##### 5.2.2 map页
+
+​	map页的整体布局如下：
+
+<img src=".\picture\image-20211105110752011.png" alt="image-20211105110752011" style="zoom:50%;" />
+
+其功能有：
+
+* 单击地图省份
+
+  可以获取到其所选中省的疫情信息、疫情组成以及相关历史趋势。
+
+  <img src=".\picture\image-20211105111205641.png" alt="image-20211105111205641" style="zoom:50%;" />
+
+* 双击地图省份
+
+  可以获取省级地图，以及各个市级单位的疫情信息、疫情组成。
+
+  <img src=".\picture\image-20211105111332911.png" alt="image-20211105111332911" style="zoom:50%;" />
+
+##### 5.2.3 hospital页
+
+​	hospital页的整体布局如下：
+
+<img src=".\picture\image-20211105111550142.png" alt="image-20211105111550142" style="zoom:50%;" />
+
+​	其功能有：
+
+* 条件查询
+
+  通过上方的复选栏可以实现精确到区县级的查询，同时在点击某省份后，市级待选栏会转变为该省的所有市。
+
+  <img src=".\picture\image-20211105111904698.png" alt="image-20211105111904698" style="zoom:50%;" />
+
+  在选定省市县之后，点击查询，即可查询到相应地区的所有核酸检测点。
+
+  <img src=".\picture\image-20211105112038074.png" alt="image-20211105112038074" style="zoom:50%;" />
+
+* 详情查看
+
+  ​	在表格中的每项存在一个详情按钮，单击后会出现该医院的详细信息。
+
+  <img src=".\picture\image-20211105112146718.png" alt="image-20211105112146718" style="zoom:50%;" />
+
+##### 5.2.4 route页
+
+​	route页的整体布局如下：
+
+<img src=".\picture\image-20211105112249935.png" alt="image-20211105112249935" style="zoom:50%;" />
+
+​	左侧为当前信息的面板，可以通过获取定位按钮获取当前所在的位置。
+
+​	右侧为风险分析面板，会根据定位信息，进行风险的评估。
+
+​	具体效果如下：
+
+<img src=".\picture\image-20211105112647036.png" alt="image-20211105112647036" style="zoom:50%;" />
+
+##### 5.2.5 riskarea页
+
+​	riskarea页的整体布局如下：
+
+<img src=".\picture\image-20211105112714241.png" alt="image-20211105112714241" style="zoom:50%;" />
+
+​	界面展示了全国的中高风险区域的数量以及具体构成，同时也包含全部的详细信息。
+
+​	同时可以使用与hospital页一样的操作进行精确的条件查询，具体效果如下：
+
+<img src="./picture/image-20211105112922859.png" alt="image-20211105112922859" style="zoom:50%;" />
+
+ 
 
 
 
